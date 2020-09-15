@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+	<event name="core_abstract_load_before">
+		<observer instance="Genaker\BlockPaymentBot\Observer\Webapi\Core\AbstractLoadBefore" name="genaker_blockpaymentbot_observer_webapi_core_abstractloadbefore_core_abstract_load_before"/>
+	</event>
+</config>

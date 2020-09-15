@@ -1,0 +1,22 @@
+{
+    "name": "genaker/module-blockpaymentbot",
+    "description": "",
+    "type": "magento2-module",
+    "license": "OSL-3.0",
+    "authors": [
+        {
+            "email": "yegorshytikov@gmail.com",
+            "name": "Yegor Shytikov"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Genaker\\BlockPaymentBot\\": ""
+        }
+    }
+}
