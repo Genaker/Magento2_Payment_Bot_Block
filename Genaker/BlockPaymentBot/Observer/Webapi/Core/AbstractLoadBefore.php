@@ -33,6 +33,9 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 
 	$ip = $_SERVER['REMOTE_ADDR'];
 	$cartId = $matches[1][0];
+		
+	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
 
 	$config = require BP.'/app/etc/env.php';
 
@@ -60,8 +63,8 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 	die("By!");
 	}
 
-	$redis->set('Cart_'.$cartId, ++$counter, 60 * 5);
-	$redis->set('Cart_'.$cartId.'IP', $ip, 60 * 5);
+	$redis->set('Cart_'.$cartId, ++$counter, 60 * 2);
+	$redis->set('Cart_'.$cartId.'IP', $ip, 60 * 2);
 	}
 	} catch (\Throwable $e){
 	 die("Custom Function Error -> " . $e->getMessage());
