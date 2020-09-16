@@ -1,5 +1,13 @@
 # Mage2 Module Genaker BlockPaymentBot
 
+How to test 
+
+send POSTrequest to {domain}/rest/default/V1/guest-carts/dgfjsdhfgsdhfgsdhfgsdhfgsdjfk/payment-information
+
+with the same cart ID multiple times after you request will be blocked for 5 minutes...
+
+You can adjust rate and time.
+
     ``genaker/module-blockpaymentbot``
 
  - [Main Functionalities](#markdown-header-main-functionalities)
