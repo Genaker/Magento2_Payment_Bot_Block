@@ -9,6 +9,10 @@ namespace Genaker\BlockPaymentBot\Observer\Webapi\Core;
 
 class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 {
+	
+    // Execute only once per request ...
+    protected $flag = false;
+
 
     /**
      * Execute observer
@@ -19,8 +23,12 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
     public function execute(
         \Magento\Framework\Event\Observer $observer
     ) {
-	if ($_SERVER['REQUEST_METHOD'] !== 'POST')
-		return 0;
+	
+	if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $this->flag === true)
+                return 0;
+
+        $this->flag = true;
+	    
 	try {
 	$re = '/\/rest\/default\/V1\/guest-carts\/(.*)\/payment-information/i';
 
@@ -36,6 +44,10 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 		
 	if (isset($_SERVER['HTTP_X_FORWARDED_FOR']))
         $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		
+	if (isset($_SERVER['FASTLY-CLIENT-IP']))
+        $ip = $_SERVER['FASTLY-CLIENT-IP'];
+
 
 	$config = require BP.'/app/etc/env.php';
 
