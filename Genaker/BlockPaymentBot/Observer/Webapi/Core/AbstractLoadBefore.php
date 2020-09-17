@@ -71,7 +71,7 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 	if($counter === null){
 	$counter = 0;
 	}
-	if ($counter > 6){
+	if ($counter > 20){
 	die("By!");
 	}
 
