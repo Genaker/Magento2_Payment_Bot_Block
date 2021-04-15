@@ -77,7 +77,7 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                     $counter = 0;
                 }
                 if ($counter > 20) {
-                    die("By!");
+                    die(" Bye!");
                 }
 
                 $redis->set('Cart_'.$cartId, ++$counter, 60 * 2);
