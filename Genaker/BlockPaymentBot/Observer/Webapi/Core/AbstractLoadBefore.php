@@ -68,6 +68,7 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                 $counter = $redis->get('Cart_'.$cartId);
                 $previousIP = $redis->get('Cart_'.$cartId.'IP');
                 //die($previousIP);
+                // If the cheater changed IP address we are blocking that guy right away
                 if ($previousIP !== $ip && $previousIP != null) {
                     die("cheater");
                 }
