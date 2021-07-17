@@ -56,5 +56,8 @@ You can adjust rate and time.
 
 ## Attributes
 
+## Requirements
+This Module has a dependency on redis.  If your magento store is not running redis this module will have not effect on protecting your site.  It won't break your site, but the protection will not be enabled.
+
 
 
