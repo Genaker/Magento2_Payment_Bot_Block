@@ -59,5 +59,24 @@ You can adjust rate and time.
 ## Requirements
 This Module has a dependency on redis.  If your magento store is not running redis this module will have not effect on protecting your site.  It won't break your site, but the protection will not be enabled.
 
+## Testing
+
+To verify the module is working as expected, you can use curl on cli to test.
+
+```
+curl -i -X POST https://www.MYDOMAIN.com/rest/default/V1/guest-carts/GKxNF6em8IzxaZlk78YR3soEYby/payment-information
+```
+
+The expected outcome of the above is for the first 20 request you should get something like this:
+
+```
+{"message":"One or more input exceptions have occurred.","errors":[{"...
+```
+
+After the first 20 requests you should get:
+
+```
+Bye!
+```
 
 
