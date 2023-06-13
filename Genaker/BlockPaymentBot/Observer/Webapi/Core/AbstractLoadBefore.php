@@ -9,15 +9,26 @@ namespace Genaker\BlockPaymentBot\Observer\Webapi\Core;
 
 class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 {
-    
-    // Execute only once per request ...
+    // Execute only once per request
     protected $flag = false;
 
     /**
-     * Execute observer
-     *
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
+        LoggerInterface $logger
+    ) {
+        $this->logger = $logger;
+    }
+
+    /**
      * @param \Magento\Framework\Event\Observer $observer
-     * @return void
+     * @return int|void
      */
     public function execute(
         \Magento\Framework\Event\Observer $observer
@@ -26,35 +37,51 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
             return 0;
         }
 
-
-        // We are usin native Redis we are not using Magento Broken Framework
         // if you don't have native redis instaleed this extension will not work
         if (!class_exists('\Redis')) {
             return 0;
         }
 
         $this->flag = true;
-        
+
         try {
             $re = '/\/rest\/default\/V1\/guest-carts\/(.*)\/payment-information/i';
 
             preg_match($re, $_SERVER['REQUEST_URI'], $matches, PREG_OFFSET_CAPTURE, 0);
 
-            //var_dump($_SERVER); die();
-
             if (count($matches) > 0) {
-                $ip = $_SERVER['REMOTE_ADDR'];
-                $cartId = $matches[1][0];
-        
-                if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-                    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-                }
-        
-                if (isset($_SERVER['FASTLY-CLIENT-IP'])) {
-                    $ip = $_SERVER['FASTLY-CLIENT-IP'];
+                $config = require BP . '/app/etc/env.php';
+
+                // Skip if Redis Cache is not set up in env.php
+                if (!isset($config['cache']['frontend']['default']['backend_options']['server']) ||
+                    !isset($config['cache']['frontend']['default']['backend_options']['port'])
+                ) {
+                    return 0;
                 }
 
-                $config = require BP.'/app/etc/env.php';
+                // Get customer Cart Id
+                $cartId = trim($matches[1][0]);
+
+                // Get customer Ip address
+                if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+                    $ips = $_SERVER['HTTP_CLIENT_IP'];
+                } elseif (!empty($_SERVER['FASTLY-CLIENT-IP'])) {
+                    $ips = $_SERVER['FASTLY-CLIENT-IP'];
+                } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                    $ips = $_SERVER['HTTP_X_FORWARDED_FOR'];
+                } elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
+                    $ips = $_SERVER['HTTP_X_REAL_IP'];
+                } else {
+                    $ips = $_SERVER['REMOTE_ADDR'];
+                }
+
+                // We may have comma separated list
+                $ip = trim(count(explode(',', (string)$ips)) > 0 ? explode(',', (string)$ips)[0] : $ips);
+
+                if (empty($cartId) || empty($ip)) {
+                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore observer logical error: ip: " . $ip . ",  or cartId: " . $cartId ." are empty");
+                    return 0;
+                }
 
                 $redis = new \Redis();
 
@@ -65,26 +92,27 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                     'cache'
                 );
 
-                $counter = $redis->get('Cart_'.$cartId);
-                $previousIP = $redis->get('Cart_'.$cartId.'IP');
-                //die($previousIP);
                 // If the cheater changed IP address we are blocking that guy right away
+                $previousIP = $redis->get('Cart_' . $cartId . 'IP');
                 if ($previousIP !== $ip && $previousIP != null) {
-                    die("cheater");
+                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore cheater detected, ip: " . $ip . ", previousIP: " . $previousIP . ", cartId: " . $cartId);
+                    die("Cheater?");
                 }
 
-                if ($counter === null) {
+                $counter = $redis->get('Cart_' . $cartId);
+                if (!$counter || $counter == '') {
                     $counter = 0;
                 }
                 if ($counter > 20) {
-                    die(" Bye!");
+                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore sent bye, ip: " . $ip . ", cartId: " . $cartId);
+                    die("Bye!");
                 }
 
-                $redis->set('Cart_'.$cartId, ++$counter, 60 * 2);
-                $redis->set('Cart_'.$cartId.'IP', $ip, 60 * 2);
+                $redis->set('Cart_' . $cartId, ++$counter, 60 * 2);
+                $redis->set('Cart_' . $cartId . 'IP', $ip, 60 * 2);
             }
         } catch (\Throwable $e) {
-            die("Custom Function Error -> " . $e->getMessage());
+            $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore observer error: " . $e->getMessage());
         }
     }
 }
