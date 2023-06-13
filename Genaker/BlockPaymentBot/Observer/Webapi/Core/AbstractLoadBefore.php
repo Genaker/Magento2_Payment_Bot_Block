@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Genaker\BlockPaymentBot\Observer\Webapi\Core;
 
+use Psr\Log\LoggerInterface;
+
 class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
 {
     // Execute only once per request
