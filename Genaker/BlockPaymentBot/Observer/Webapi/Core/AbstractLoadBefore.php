@@ -36,13 +36,12 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
     public function execute(
         \Magento\Framework\Event\Observer $observer
     ) {
-        // For the test, we can check limit using an empty GET request with the parameter "?bot_test=1" from the browser or console 
+        // For the test, we can check the limit using an empty GET request with the parameter "?bot_test=1" from the browser or console 
         if (($_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_GET['bot_test'])) || $this->flag === true) {
             return 0;
         }
 
-        // We are using native Redis. We are not using the Magento Broken Framework
-        //If you don't have native Redis installed this extension will not work
+        //If you don't have native Redis installed, this extension will not work
         if (!class_exists('\Redis')) {
             return 0;
         }
