@@ -17,6 +17,14 @@ Also, you can set ENV variables to adjust the logic:  <br\>
  - **$_ENV['MAGE_BOT_RECORD_TIME']** Time  in minutes during which the counter will not be null. So if you have 60, then your counting limit for 1 hour. Default 2.
  - **$_ENV['MAGE_BOT_BLOCK_COUNT']** Request counter limit when user will be locked for **MAGE_BOT_BLOCK_TIME** minutes. Default 20
 
+# Why are we using ENV variables and not a Magento config? 
+
+Magento 2 is a slow legacy system; however, the new approach is to store configurations in the env variables.
+Enviremental config has gained significant popularity in PHP over recent years. It uses dotenv files, which are named after the de facto file name: .env. 
+These plain text files define the environment variables required for an application to work as a list of key/value pairs.
+When using the Magento configuration, you need magento to be up and running. This extension doesn't load the entire magento but blocks bots immediately. If you will load magento bots will consume entire resources from your servers. Don't load Magento when you don't need it. Use PHP microservices! 
+
+
 You can adjust the rate and time.
 
     ``genaker/module-blockpaymentbot``
