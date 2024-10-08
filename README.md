@@ -17,6 +17,8 @@ Also, you can set ENV variables to adjust the logic:
  - **$_ENV['MAGE_BOT_RECORD_TIME']** Time  in minutes during which the counter will not be null. So if you have 60, then your counting limit for 1 hour. Default 2.
  - **$_ENV['MAGE_BOT_BLOCK_COUNT']** Request counter limit when user will be locked for **MAGE_BOT_BLOCK_TIME** minutes. Default 20
 
+Adjust until bots gone.
+
 # Why are we using ENV variables and not a Magento config? 
 
 Magento 2 is a slow legacy system; however, the new approach is to store configurations in the env variables.
