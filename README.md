@@ -64,19 +64,17 @@ You can adjust the rate and time.
 
 ## Configuration
 
-
+Using **ENV** varriables
 
 
 ## Specifications
 
  - Observer
-	- core_abstract_load_before > Genaker\BlockPaymentBot\Observer\Webapi\Core\AbstractLoadBefore
+ - core_abstract_load_before > Genaker\BlockPaymentBot\Observer\Webapi\Core\AbstractLoadBefore
 
-
-## Attributes
 
 ## Requirements
-This Module has a dependency on redis.  If your magento store is not running redis this module will have not effect on protecting your site.  It won't break your site, but the protection will not be enabled.
+This Module has a dependency on  phpRedis.  If your magento store is not running Redis, this module will have no effect on protecting your site.  It won't break your site, but the protection will not be enabled.
 
 ## Testing
 
