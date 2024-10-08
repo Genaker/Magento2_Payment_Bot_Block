@@ -24,6 +24,8 @@ Enviremental config has gained significant popularity in PHP over recent years. 
 These plain text files define the environment variables required for an application to work as a list of key/value pairs.
 When using the Magento configuration, you need magento to be up and running. This extension doesn't load the entire magento but blocks bots immediately. If you will load magento bots will consume entire resources from your servers. Don't load Magento when you don't need it. Use PHP microservices! 
 
+I am lovers of the magento config. Config contains hundreds of thousands of records and even cached. It takes minutes to load every request from the cache (it still requires unzipping and unserializing). Magento config is an excellent example of how not to do it. With the bigger projects, merchants have more significant issues with magento. 
+
 
 You can adjust the rate and time.
 
