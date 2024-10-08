@@ -6,7 +6,18 @@ send POSTrequest to {domain}/rest/default/V1/guest-carts/dgfjsdhfgsdhfgsdhfgsdhf
 
 with the same cart ID multiple times after you request will be blocked for 5 minutes...
 
-You can adjust rate and time.
+Now you can send GET request for test with the parameter ?bot_test=1
+
+```
+https://query.tilebar.com/rest/default/V1/guest-carts/GKxNF6em8IzxaZlk78YR3soEYby/payment-information?bot_test=1
+```
+Also, you can set ENV variables to adjust the logic:  <br\>
+
+ - *$_ENV['MAGE_BOT_BLOCK_TIME']* Block bot for N Minutes, Default 2.
+ - *$_ENV['MAGE_BOT_RECORD_TIME']* Time  in minutes during which the counter will not be null. So if you have 60, then your counting limit for 1 hour. Default 2.
+ - *$_ENV['MAGE_BOT_BLOCK_COUNT']* Request counter limit when user will be locked for *MAGE_BOT_BLOCK_TIME* minutes. Default 20
+
+You can adjust the rate and time.
 
     ``genaker/module-blockpaymentbot``
 
