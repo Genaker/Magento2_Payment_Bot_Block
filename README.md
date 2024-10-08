@@ -9,7 +9,7 @@ with the same cart ID multiple times after you request will be blocked for 5 min
 Now you can send GET request for test with the parameter ?bot_test=1
 
 ```
-https://query.tilebar.com/rest/default/V1/guest-carts/GKxNF6em8IzxaZlk78YR3soEYby/payment-information?bot_test=1
+https://domain.com/rest/default/V1/guest-carts/GKxNF6em8IzxaZlk78YR3soEYby/payment-information?bot_test=1
 ```
 Also, you can set ENV variables to adjust the logic:  <br\>
 
