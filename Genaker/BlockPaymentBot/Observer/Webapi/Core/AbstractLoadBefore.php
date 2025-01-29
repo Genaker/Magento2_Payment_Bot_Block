@@ -68,6 +68,20 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
             if (count($matches) > 0 || $cartMatch) {
                 $ip = $_SERVER['REMOTE_ADDR'];
 
+                $rawData = file_get_contents("php://input"); // Get raw body
+                $data = json_decode($rawData, true); // Convert JSON to array
+
+                $formCheck = false;
+                if (isset($data["paymentMethod"]["additional_data"]["form_check"]) &&  
+                $data["paymentMethod"]["additional_data"]["form_check"] === "true") {
+                    $formCheck = true;
+                }
+                if (!$formCheck){
+                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore cheater detected $ip - checkout form error");
+                    http_response_code(401);
+                    die("Credit Card Error");
+                }
+
                 if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
                     $ips = $_SERVER['HTTP_X_FORWARDED_FOR'];
                 } else if (isset($_SERVER['FASTLY-CLIENT-IP'])) {
