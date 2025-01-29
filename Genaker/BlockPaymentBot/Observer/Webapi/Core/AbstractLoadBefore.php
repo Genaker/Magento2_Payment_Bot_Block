@@ -78,7 +78,7 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                 }
                 if (!$formCheck){
                     $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore cheater detected $ip - checkout form error");
-                    http_response_code(401);
+                    http_response_code(402);
                     die("Credit Card Error");
                 }
 
