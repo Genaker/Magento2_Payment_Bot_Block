@@ -72,8 +72,11 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                 $data = json_decode($rawData, true); // Convert JSON to array
 
                 $formCheck = false;
-                if (isset($data["paymentMethod"]["additional_data"]["form_check"]) &&  
-                $data["paymentMethod"]["additional_data"]["form_check"] === "true") {
+                
+                if (isset($data["paymentMethod"]) &&
+                    isset($data["paymentMethod"]["additional_data"]) &&
+                    isset($data["paymentMethod"]["additional_data"]["form_check"]) &&
+                    $data["paymentMethod"]["additional_data"]["form_check"] === "true") {
                     $formCheck = true;
                 }
                 if (!$formCheck){
