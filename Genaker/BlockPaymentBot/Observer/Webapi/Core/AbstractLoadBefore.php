@@ -37,10 +37,12 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
         \Magento\Framework\Event\Observer $observer
     ) {
         // For the test, we can check the limit using an empty GET request with the parameter "?bot_test=1" from the browser or console 
-        if (($_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_GET['bot_test'])) || $this->flag === true) {
+        $isTest = $_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_GET['bot_test']);
+        if ($isTest || $this->flag === true) {
             return 0;
         }
 
+        // We are using native Redis.
         //If you don't have native Redis installed, this extension will not work
         if (!class_exists('\Redis')) {
             return 0;
@@ -51,18 +53,20 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
         }
 
         $this->flag = true;
-
         try {
-            $re = '/\/V1\/guest-carts\/(.*)\/payment-information/i';
+            $matches = [];
+            $cartMatch = false;
 
-            preg_match($re, $_SERVER['REQUEST_URI'], $matches, PREG_OFFSET_CAPTURE, 0);
-
-            // Get the customer's IP address
-            if (count($matches) > 0) {
+            if (strpos($_SERVER['REQUEST_URI'], '/totals-information') !== false) {
+                $cartMatch = true;
+            }
+            if (!$cartMatch) {
+                $re = '/\/V1\/guest-carts\/(.*)\/payment-information/i';
+                preg_match($re, $_SERVER['REQUEST_URI'], $matches, PREG_OFFSET_CAPTURE, 0);
+            }
+            // Get customer's IP address
+            if (count($matches) > 0 || $cartMatch) {
                 $ip = $_SERVER['REMOTE_ADDR'];
-
-                // Get customer Cart ID
-                $cartId = trim($matches[1][0]);
 
                 if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
                     $ips = $_SERVER['HTTP_X_FORWARDED_FOR'];
@@ -105,53 +109,73 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                     $persistentIdentifier
                 );
 
-                if (empty($cartId) || empty($ip)) {
-                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore observer logical error: ip: " . $ip . ",  or cartId: " . $cartId . " are empty");
-                    return 0;
+                if ($cartMatch) {
+                    $redis->set('Cart_IP_Check_' . $ip, "true", 3600);
+                    return 1;
                 }
 
-                $counter = $redis->get('Cart_' . $cartId);
-                $counterIP = $redis->get('Cart_' . $ip . '_IP');
-                $previousIP = $redis->get('Cart_' . $cartId . '_IP');
+                if (!$cartMatch) {
 
-                // If the cheater changed IP address, we are blocking that guy right away
-                if ($previousIP !== $ip && $previousIP != null) {
-                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore cheater detected, ip: " . $ip . ", previousIP: " . $previousIP . ", cartId: " . $cartId);
-                    http_response_code(511);
-                    die("Cheater?");
-                }
+                    $cartCheck = $redis->get('Cart_IP_Check_' . $ip);
 
-                if ($counter === null) {
-                    $counter = 0;
-                }
-                if ($counterIP === null) {
-                    $counterIP = 0;
-                }
+                    if ($cartCheck === false) {
+                        $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore cheater detected $ip - checkout without cart");
+                        http_response_code(401);
+                        die("Credit Card Error");
+                    }
 
-                $blockCounter = (int) $_ENV['MAGE_BOT_BLOCK_COUNT'];
+                    // Get customer Cart Id
+                    $cartId = trim($matches[1][0]);
 
-                if ($counter == $blockCounter) {
-                    $redis->set('Cart_' . $cartId, ++$counter, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
-                    $redis->set('Cart_' . $cartId . '_IP', $ip, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
-                    http_response_code(511);
-                    die(" Bye!");
-                } else if ($counter > $blockCounter) {
-                    http_response_code(511);
-                    die(" Bye Cheater!");
-                }
-                if ($counterIP == $blockCounter) {
-                    $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore sent bye, ip: " . $ip . ", cartId: " . $cartId);
-                    redis->set('Cart_' . $ip . '_IP', ++$counterIP, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
-                    http_response_code(511);
-                    die(" Bye!");
-                } else if ($counterIP > $blockCounter) {
-                    http_response_code(511);
-                    die(" Bye Cheater!");
-                }
+                    if (empty($cartId) || empty($ip)) {
+                        $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore observer logical error: ip: " . $ip . ",  or cartId: " . $cartId . " are empty");
+                        return 0;
+                    }
 
-                $redis->set('Cart_' . $cartId, ++$counter, 60 * (int) $_ENV['MAGE_BOT_RECORD_TIME']);
-                $redis->set('Cart_' . $cartId . '_IP', $ip, 60 * (int) $_ENV['MAGE_BOT_RECORD_TIME']);
-                $redis->set('Cart_' . $ip . '_IP', ++$counterIP, 60 * (int) $_ENV['MAGE_BOT_RECORD_TIME']);
+                    $counter = $redis->get('Cart_' . $cartId);
+
+                    $counterIP = $redis->get('Cart_' . $ip . '_IP');
+                    $previousIP = $redis->get('Cart_' . $cartId . '_IP');
+
+                    // If the cheater changed IP address, we are blocking that guy right away
+                    if ($previousIP !== $ip && $previousIP != false) {
+                        $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore cheater detected, ip: " . $ip . ", previousIP: " . $previousIP . ", cartId: " . $cartId);
+                        http_response_code(511);
+                        die("Cheater?");
+                    }
+
+                    if ($counter === false) {
+                        $counter = 0;
+                    }
+                    if ($counterIP === false) {
+                        $counterIP = 0;
+                    }
+
+                    $blockCounter = (int) $_ENV['MAGE_BOT_BLOCK_COUNT'];
+
+                    if ($counter == $blockCounter) {
+                        $redis->set('Cart_' . $cartId, ++$counter, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
+                        $redis->set('Cart_' . $cartId . '_IP', $ip, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
+                        http_response_code(511);
+                        die(" Bye!");
+                    } else if ($counter > $blockCounter) {
+                        http_response_code(511);
+                        die(" Bye Cheater!");
+                    }
+                    if ($counterIP == $blockCounter) {
+                        $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore sent bye, ip: " . $ip . ", cartId: " . $cartId);
+                        redis->set('Cart_' . $ip . '_IP', ++$counterIP, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
+                        http_response_code(511);
+                        die(" Bye!");
+                    } else if ($counterIP > $blockCounter) {
+                        http_response_code(511);
+                        die(" Bye Cheater!");
+                    }
+
+                    $redis->set('Cart_' . $cartId, ++$counter, 60 * (int) $_ENV['MAGE_BOT_RECORD_TIME']);
+                    $redis->set('Cart_' . $cartId . '_IP', $ip, 60 * (int) $_ENV['MAGE_BOT_RECORD_TIME']);
+                    $redis->set('Cart_' . $ip . '_IP', ++$counterIP, 60 * (int) $_ENV['MAGE_BOT_RECORD_TIME']);
+                }
             }
         } catch (\Throwable $e) {
             $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore observer error: " . $e->getMessage());
