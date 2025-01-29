@@ -18,6 +18,10 @@ Also, you can set ENV variables to adjust the logic:
  - **$_ENV['MAGE_BOT_BLOCK_COUNT']** Request counter limit when user will be locked for **MAGE_BOT_BLOCK_TIME** minutes. Default 20
 
 Adjust until bots gone.
+# ENV package 
+Also, there is a package to import ENV variables from the file -> 
+https://github.com/Genaker/mage-dotenv
+
 
 # Why are we using ENV variables and not a Magento config? 
 
