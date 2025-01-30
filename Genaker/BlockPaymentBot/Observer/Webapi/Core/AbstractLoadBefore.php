@@ -181,7 +181,7 @@ class AbstractLoadBefore implements \Magento\Framework\Event\ObserverInterface
                     }
                     if ($counterIP == $blockCounter) {
                         $this->logger->error("Genaker_BlockPaymentBot::AbstractLoadBefore sent bye, ip: " . $ip . ", cartId: " . $cartId);
-                        redis->set('Cart_' . $ip . '_IP', ++$counterIP, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
+                        $redis->set('Cart_' . $ip . '_IP', ++$counterIP, 60 * (int) $_ENV['MAGE_BOT_BLOCK_TIME']);
                         http_response_code(511);
                         die(" Bye!");
                     } else if ($counterIP > $blockCounter) {
