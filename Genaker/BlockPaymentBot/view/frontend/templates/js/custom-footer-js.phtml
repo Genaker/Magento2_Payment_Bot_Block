@@ -1,17 +1,1 @@
-<script type="text/javascript">
-define([
-    'jquery',
-    'Magento_Checkout/js/view/payment/default'
-], function ($, Component) {
-    'use strict';
-    return Component.extend({
-        /** Extend getData() to send custom field */
-        getData: function () {
-            var parentData = this._super(); // Call original getData()
-            parentData.additional_data = parentData.additional_data || {};
-            parentData.additional_data.form_check = true;
-            return parentData;
-        }
-    });
-});
-</script>
+
